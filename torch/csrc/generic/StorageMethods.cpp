@@ -5,7 +5,7 @@
 static PyObject * THPStorage_(size)(THPStorage *self)
 {
   HANDLE_TH_ERRORS
-  return PyLong_FromLongLong(THStorage_(size)(LIBRARY_STATE self->cdata));
+  return PyLong_FromLong(THStorage_(size)(LIBRARY_STATE self->cdata));
   END_HANDLE_TH_ERRORS
 }
 
@@ -43,14 +43,14 @@ static PyObject * THPStorage_(isPinned)(THPStorage *self)
 static PyObject * THPStorage_(elementSize)(THPStorage *self)
 {
   HANDLE_TH_ERRORS
-  return PyLong_FromLongLong(THStorage_(elementSize)(LIBRARY_STATE_NOARGS));
+  return PyLong_FromLong(THStorage_(elementSize)(LIBRARY_STATE_NOARGS));
   END_HANDLE_TH_ERRORS
 }
 
 static PyObject * THPStorage_(new)(THPStorage *self)
 {
   HANDLE_TH_ERRORS
-  THStoragePtr new_storage = THStorage_(new)(LIBRARY_STATE_NOARGS);
+  THStoragePtr new_storage(THStorage_(new)(LIBRARY_STATE_NOARGS));
   PyObject *_ret = THPStorage_(New)(new_storage);
   new_storage.release();
   return _ret;
@@ -62,7 +62,7 @@ static PyObject * THPStorage_(resize_)(THPStorage *self, PyObject *number_arg)
   HANDLE_TH_ERRORS
   THPUtils_assert(THPUtils_checkLong(number_arg), "resize_ expects an int, "
       "but got %s", THPUtils_typename(number_arg));
-  int64_t newsize = THPUtils_unpackLong(number_arg);
+  long newsize = THPUtils_unpackLong(number_arg);
   THStorage_(resize)(LIBRARY_STATE self->cdata, newsize);
   Py_INCREF(self);
   return (PyObject*)self;
@@ -123,16 +123,16 @@ static PyObject * THPStorage_(fromBuffer)(PyObject *_unused, PyObject *args, PyO
 
   if (offset < 0 || offset > buffer.len) {
     PyErr_Format(PyExc_ValueError,
-      "offset must be non-negative and no greater than buffer length (%lld), "
-      "but got %lld", (int64_t)offset, (int64_t)buffer.len);
+      "offset must be non-negative and no greater than buffer length (%ld), "
+      "but got %ld", (long)offset, (long)buffer.len);
     PyBuffer_Release(&buffer);
     return NULL;
   }
 
   if (count < 0) {
     if ((buffer.len - offset) % sizeof(real) != 0) {
-      PyErr_Format(PyExc_ValueError, "buffer size (%lld) must be a multiple "
-          "of element size (%d)", (int64_t)buffer.len, (int)sizeof(real));
+      PyErr_Format(PyExc_ValueError, "buffer size (%ld) must be a multiple "
+          "of element size (%ld)", (long)buffer.len, (long)sizeof(real));
       PyBuffer_Release(&buffer);
       return NULL;
     }
@@ -140,9 +140,9 @@ static PyObject * THPStorage_(fromBuffer)(PyObject *_unused, PyObject *args, PyO
   }
 
   if (offset + (count * (Py_ssize_t)sizeof(real)) > buffer.len) {
-    PyErr_Format(PyExc_ValueError, "buffer has only %lld elements after offset "
-        "%ld, but specified a size of %lld", (int64_t)(buffer.len - offset),
-        (int64_t)offset, (int64_t)count);
+    PyErr_Format(PyExc_ValueError, "buffer has only %ld elements after offset "
+        "%ld, but specified a size of %ld", (long)(buffer.len - offset),
+        (long)offset, (long)count);
     PyBuffer_Release(&buffer);
     return NULL;
   }
@@ -226,7 +226,7 @@ static PyObject *THPStorage_(setFromFile)(THPStorage *self, PyObject *args)
 PyObject * THPStorage_(getDevice)(THPStorage *self)
 {
   HANDLE_TH_ERRORS
-  return PyLong_FromLongLong(THCStorage_(getDevice)(LIBRARY_STATE self->cdata));
+  return PyLong_FromLong(THCStorage_(getDevice)(LIBRARY_STATE self->cdata));
   END_HANDLE_TH_ERRORS
 }
 #endif
@@ -250,15 +250,15 @@ PyObject * THPStorage_(_rootStorage)(THPStorage *self)
 {
   HANDLE_TH_ERRORS
   if (!(self->cdata->flag & TH_STORAGE_VIEW)) {
-    return Py_BuildValue("(ON)", self, PyLong_FromLongLong(0));
+    return Py_BuildValue("(ON)", self, PyLong_FromLong(0));
   }
   THStorage *root = self->cdata;
   while (root->flag & TH_STORAGE_VIEW)
     root = root->view;
   size_t offset = self->cdata->data - root->data;
   THStorage_(retain)(LIBRARY_STATE root);
-  THPObjectPtr storage = THPStorage_(New)(root);
-  PyObject *result = Py_BuildValue("(NN)", storage.get(), PyLong_FromLongLong(offset));
+  THPObjectPtr storage(THPStorage_(New)(root));
+  PyObject *result = Py_BuildValue("(NN)", storage.get(), PyLong_FromLong(offset));
   storage.release();
   return result;
   END_HANDLE_TH_ERRORS

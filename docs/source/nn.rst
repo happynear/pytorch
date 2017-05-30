@@ -160,7 +160,7 @@ Pooling Layers
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. autoclass:: AdaptiveMaxPool2d
-    :members:       
+    :members:
 
 :hidden:`AdaptiveAvgPool1d`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -174,7 +174,7 @@ Pooling Layers
 .. autoclass:: AdaptiveAvgPool2d
     :members:
 
-       
+
 Non-linear Activations
 ----------------------------------
 
@@ -303,19 +303,19 @@ Normalization layers
     :members:
 
 :hidden:`InstanceNorm1d`
-~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. autoclass:: InstanceNorm1d
     :members:
 
 :hidden:`InstanceNorm2d`
-~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. autoclass:: InstanceNorm2d
     :members:
 
 :hidden:`InstanceNorm3d`
-~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. autoclass:: InstanceNorm3d
     :members:
@@ -503,6 +503,12 @@ Loss functions
 .. autoclass:: MultiMarginLoss
     :members:
 
+:hidden:`TripletMarginLoss`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. autoclass:: TripletMarginLoss
+    :members:
+
 
 Vision layers
 ----------------
@@ -676,7 +682,7 @@ Pooling functions
 
 .. autofunction:: adaptive_avg_pool2d
 
-   
+
 Non-linear activation functions
 -------------------------------
 
@@ -808,6 +814,11 @@ Distance functions
 
 .. autofunction:: pairwise_distance
 
+:hidden:`cosine_similarity`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. autofunction:: cosine_similarity
+
 
 Loss functions
 --------------
@@ -837,6 +848,11 @@ Loss functions
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. autofunction:: smooth_l1_loss
+
+:hidden:`triplet_margin_loss`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. autofunction:: triplet_margin_loss
 
 Vision functions
 ----------------

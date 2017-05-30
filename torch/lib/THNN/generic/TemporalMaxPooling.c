@@ -9,9 +9,9 @@ static inline void THNN_(TemporalMaxPooling_shapeCheck)(
                          THIndexTensor *indices,
                          int kW,
                          int dW) {
-  int64_t niframe;
-  int64_t framesize;
-  int64_t noframe;
+  long niframe;
+  long framesize;
+  long noframe;
 
   int dimS = 0; // sequence dimension
   int dimF = 1; // feature dimension
@@ -56,15 +56,15 @@ void THNN_(TemporalMaxPooling_updateOutput)(
           int kW,
           int dW)
 {
-  int64_t niframe;
-  int64_t framesize;
-  int64_t noframe;
+  long niframe;
+  long framesize;
+  long noframe;
 
   real *input_data;
   real *output_data;
   THIndex_t *indices_data;
 
-  int64_t t, y;
+  long t, y;
 
   int dimS = 0; // sequence dimension
   int dimF = 1; // feature dimension
@@ -107,9 +107,9 @@ void THNN_(TemporalMaxPooling_updateOutput)(
       for(y = 0; y < framesize; y++)
       {
         /* compute local max: */
-        int64_t maxindex = -1;
+        long maxindex = -1;
         real maxval = -THInf;
-        int64_t x;
+        long x;
         for(x = 0; x < kW; x++)
         {
           real val = ip[x*framesize+y];
@@ -129,8 +129,8 @@ void THNN_(TemporalMaxPooling_updateOutput)(
   else
   {
     /* number of batch frames */
-    int64_t nbframe = input->size[0];
-    int64_t i;
+    long nbframe = input->size[0];
+    long i;
 
     /* resize output */
     THTensor_(resize3d)(output, nbframe, noframe, framesize);
@@ -159,9 +159,9 @@ void THNN_(TemporalMaxPooling_updateOutput)(
         for(y = 0; y < framesize; y++)
         {
           /* compute local max: */
-          int64_t maxindex = -1;
+          long maxindex = -1;
           real maxval = -THInf;
-          int64_t x;
+          long x;
           for(x = 0; x < kW; x++)
           {
             real val = ip[x*framesize+y];
@@ -194,15 +194,15 @@ void THNN_(TemporalMaxPooling_updateGradInput)(
           int kW,
           int dW)
 {
-  int64_t niframe;
+  long niframe;
   int noframe;
-  int64_t framesize;
+  long framesize;
 
   real *gradInput_data;
   real *gradOutput_data;
   THIndex_t *indices_data;
 
-  int64_t t, y;
+  long t, y;
 
   THNN_(TemporalMaxPooling_shapeCheck)(state, input, gradOutput, indices, kW, dW);
   /* get contiguous gradOutput */
@@ -241,7 +241,7 @@ void THNN_(TemporalMaxPooling_updateGradInput)(
       for(y = 0; y < framesize; y++)
       {
         /* compute local max: */
-        int64_t maxindex = (long)xp[y];
+        long maxindex = (long)xp[y];
 	if (maxindex != -1)
 	  gip[maxindex*framesize+y] += gop[y];
       }
@@ -250,8 +250,8 @@ void THNN_(TemporalMaxPooling_updateGradInput)(
   else
   {
     /* number of batch frames */
-    int64_t nbframe = input->size[0];
-    int64_t i;
+    long nbframe = input->size[0];
+    long i;
 
     for(i = 0; i < nbframe; i++)
     {
@@ -268,7 +268,7 @@ void THNN_(TemporalMaxPooling_updateGradInput)(
         for(y = 0; y < framesize; y++)
         {
           /* compute local max: */
-          int64_t maxindex = (long)xp[y];
+          long maxindex = (long)xp[y];
 	  if (maxindex != -1)
 	    gip[maxindex*framesize+y] += gop[y];
         }

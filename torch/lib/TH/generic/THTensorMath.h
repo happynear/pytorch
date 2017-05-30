@@ -18,6 +18,7 @@ TH_API void THTensor_(indexFill)(THTensor *tensor, int dim, THLongTensor *index,
 
 TH_API void THTensor_(gather)(THTensor *tensor, THTensor *src, int dim, THLongTensor *index);
 TH_API void THTensor_(scatter)(THTensor *tensor, int dim, THLongTensor *index, THTensor *src);
+TH_API void THTensor_(scatterAdd)(THTensor *tensor, int dim, THLongTensor *index, THTensor *src);
 TH_API void THTensor_(scatterFill)(THTensor *tensor, int dim, THLongTensor *index, real val);
 
 TH_API accreal THTensor_(dot)(THTensor *t, THTensor *src);
@@ -69,13 +70,13 @@ TH_API void THTensor_(baddbmm)(THTensor *r_, real beta, THTensor *t, real alpha,
 TH_API void THTensor_(match)(THTensor *r_, THTensor *m1, THTensor *m2, real gain);
 
 TH_API ptrdiff_t THTensor_(numel)(THTensor *t);
-TH_API void THTensor_(max)(THTensor *values_, THLongTensor *indices_, THTensor *t, int dimension);
-TH_API void THTensor_(min)(THTensor *values_, THLongTensor *indices_, THTensor *t, int dimension);
-TH_API void THTensor_(kthvalue)(THTensor *values_, THLongTensor *indices_, THTensor *t, int64_t k, int dimension);
-TH_API void THTensor_(mode)(THTensor *values_, THLongTensor *indices_, THTensor *t, int dimension);
-TH_API void THTensor_(median)(THTensor *values_, THLongTensor *indices_, THTensor *t, int dimension);
-TH_API void THTensor_(sum)(THTensor *r_, THTensor *t, int dimension);
-TH_API void THTensor_(prod)(THTensor *r_, THTensor *t, int dimension);
+TH_API void THTensor_(max)(THTensor *values_, THLongTensor *indices_, THTensor *t, int dimension, int keepdim);
+TH_API void THTensor_(min)(THTensor *values_, THLongTensor *indices_, THTensor *t, int dimension, int keepdim);
+TH_API void THTensor_(kthvalue)(THTensor *values_, THLongTensor *indices_, THTensor *t, long k, int dimension, int keepdim);
+TH_API void THTensor_(mode)(THTensor *values_, THLongTensor *indices_, THTensor *t, int dimension, int keepdim);
+TH_API void THTensor_(median)(THTensor *values_, THLongTensor *indices_, THTensor *t, int dimension, int keepdim);
+TH_API void THTensor_(sum)(THTensor *r_, THTensor *t, int dimension, int keepdim);
+TH_API void THTensor_(prod)(THTensor *r_, THTensor *t, int dimension, int keepdim);
 TH_API void THTensor_(cumsum)(THTensor *r_, THTensor *t, int dimension);
 TH_API void THTensor_(cumprod)(THTensor *r_, THTensor *t, int dimension);
 TH_API void THTensor_(sign)(THTensor *r_, THTensor *t);
@@ -90,15 +91,15 @@ TH_API void THTensor_(cminValue)(THTensor *r, THTensor *t, real value);
 TH_API void THTensor_(zeros)(THTensor *r_, THLongStorage *size);
 TH_API void THTensor_(ones)(THTensor *r_, THLongStorage *size);
 TH_API void THTensor_(diag)(THTensor *r_, THTensor *t, int k);
-TH_API void THTensor_(eye)(THTensor *r_, int64_t n, int64_t m);
+TH_API void THTensor_(eye)(THTensor *r_, long n, long m);
 TH_API void THTensor_(range)(THTensor *r_, accreal xmin, accreal xmax, accreal step);
-TH_API void THTensor_(randperm)(THTensor *r_, THGenerator *_generator, int64_t n);
+TH_API void THTensor_(randperm)(THTensor *r_, THGenerator *_generator, long n);
 
 TH_API void THTensor_(reshape)(THTensor *r_, THTensor *t, THLongStorage *size);
 TH_API void THTensor_(sort)(THTensor *rt_, THLongTensor *ri_, THTensor *t, int dimension, int descendingOrder);
-TH_API void THTensor_(topk)(THTensor *rt_, THLongTensor *ri_, THTensor *t, int64_t k, int dim, int dir, int sorted);
-TH_API void THTensor_(tril)(THTensor *r_, THTensor *t, int64_t k);
-TH_API void THTensor_(triu)(THTensor *r_, THTensor *t, int64_t k);
+TH_API void THTensor_(topk)(THTensor *rt_, THLongTensor *ri_, THTensor *t, long k, int dim, int dir, int sorted);
+TH_API void THTensor_(tril)(THTensor *r_, THTensor *t, long k);
+TH_API void THTensor_(triu)(THTensor *r_, THTensor *t, long k);
 TH_API void THTensor_(cat)(THTensor *r_, THTensor *ta, THTensor *tb, int dimension);
 TH_API void THTensor_(catArray)(THTensor *result, THTensor **inputs, int numInputs, int dimension);
 
@@ -140,6 +141,7 @@ TH_API void THTensor_(abs)(THTensor *r_, THTensor *t);
 
 TH_API void THTensor_(sigmoid)(THTensor *r_, THTensor *t);
 TH_API void THTensor_(log)(THTensor *r_, THTensor *t);
+TH_API void THTensor_(lgamma)(THTensor *r_, THTensor *t);
 TH_API void THTensor_(log1p)(THTensor *r_, THTensor *t);
 TH_API void THTensor_(exp)(THTensor *r_, THTensor *t);
 TH_API void THTensor_(cos)(THTensor *r_, THTensor *t);
@@ -164,22 +166,22 @@ TH_API void THTensor_(trunc)(THTensor *r_, THTensor *t);
 TH_API void THTensor_(frac)(THTensor *r_, THTensor *t);
 TH_API void THTensor_(lerp)(THTensor *r_, THTensor *a, THTensor *b, real weight);
 
-TH_API void THTensor_(mean)(THTensor *r_, THTensor *t, int dimension);
-TH_API void THTensor_(std)(THTensor *r_, THTensor *t, int dimension, int flag);
-TH_API void THTensor_(var)(THTensor *r_, THTensor *t, int dimension, int flag);
-TH_API void THTensor_(norm)(THTensor *r_, THTensor *t, real value, int dimension);
+TH_API void THTensor_(mean)(THTensor *r_, THTensor *t, int dimension, int keepdim);
+TH_API void THTensor_(std)(THTensor *r_, THTensor *t, int dimension, int flag, int keepdim);
+TH_API void THTensor_(var)(THTensor *r_, THTensor *t, int dimension, int flag, int keepdim);
+TH_API void THTensor_(norm)(THTensor *r_, THTensor *t, real value, int dimension, int keepdim);
 TH_API void THTensor_(renorm)(THTensor *r_, THTensor *t, real value, int dimension, real maxnorm);
 TH_API accreal THTensor_(dist)(THTensor *a, THTensor *b, real value);
-TH_API void THTensor_(histc)(THTensor *hist, THTensor *tensor, int64_t nbins, real minvalue, real maxvalue);
-TH_API void THTensor_(bhistc)(THTensor *hist, THTensor *tensor, int64_t nbins, real minvalue, real maxvalue);
+TH_API void THTensor_(histc)(THTensor *hist, THTensor *tensor, long nbins, real minvalue, real maxvalue);
+TH_API void THTensor_(bhistc)(THTensor *hist, THTensor *tensor, long nbins, real minvalue, real maxvalue);
 
 TH_API accreal THTensor_(meanall)(THTensor *self);
 TH_API accreal THTensor_(varall)(THTensor *self);
 TH_API accreal THTensor_(stdall)(THTensor *self);
 TH_API accreal THTensor_(normall)(THTensor *t, real value);
 
-TH_API void THTensor_(linspace)(THTensor *r_, real a, real b, int64_t n);
-TH_API void THTensor_(logspace)(THTensor *r_, real a, real b, int64_t n);
+TH_API void THTensor_(linspace)(THTensor *r_, real a, real b, long n);
+TH_API void THTensor_(logspace)(THTensor *r_, real a, real b, long n);
 TH_API void THTensor_(rand)(THTensor *r_, THGenerator *_generator, THLongStorage *size);
 TH_API void THTensor_(randn)(THTensor *r_, THGenerator *_generator, THLongStorage *size);
 #endif

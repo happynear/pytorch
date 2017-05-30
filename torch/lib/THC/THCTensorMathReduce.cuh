@@ -133,9 +133,9 @@ template<typename Real>
 __global__ void THCTensor_kernel_renorm(Real *data, const Real value, const ptrdiff_t size, const Real maxnorm)
 {
   __shared__ Real buffer[32];
-  int64_t tx = threadIdx.x;
-  int64_t bx = blockIdx.x;
-  int64_t step = blockDim.x;
+  long tx = threadIdx.x;
+  long bx = blockIdx.x;
+  long step = blockDim.x;
   Real *row = data + size*bx;
 
   buffer[tx] = ScalarConvert<int, Real>::to(0);
@@ -330,12 +330,12 @@ __global__ void THCTensor_kernel_varOuterDim(Real *tgt, Real *src_, unsigned num
 }
 
 template<typename TensorTypeK, typename Real, bool apply_sqrt>
-__host__ void THCTensor_varOuterDim(THCState *state, TensorTypeK *tgt, TensorTypeK *src, int64_t dimension, int flag)
+__host__ void THCTensor_varOuterDim(THCState *state, TensorTypeK *tgt, TensorTypeK *src, long dimension, int flag)
 {
   unsigned ndim = TensorUtils<TensorTypeK>::getDims(state, src);
   // Treat all outer dimensions (i.e. dim < dimension) as one.
   unsigned num_orows = 1;
-  for (int64_t dim = 0; dim < dimension; dim++) {
+  for (long dim = 0; dim < dimension; dim++) {
     num_orows *= TensorUtils<TensorTypeK>::getSize(state, src, dim);
   }
   unsigned row_size = TensorUtils<TensorTypeK>::getSize(state, src, dimension);
@@ -469,8 +469,8 @@ kernelTransformReduceOuterDimIndex(K *tgt1,
 
       for (unsigned col = 0; col < row_size; ++col) {
         // +1 for Lua index
-        acc = binary_op(thrust::make_pair<K, Index>(*src, col + TH_INDEX_BASE),
-                        acc);
+        acc = binary_op(acc,
+                        thrust::make_pair<K, Index>(*src, col + TH_INDEX_BASE));
         src += num_irows;
       }
 
@@ -488,14 +488,14 @@ THC_transformReduceOuterDimIndex(THCState *state,
                                  TensorTypeK *tgt1,
                                  TensorTypeIndex *tgt2,
                                  TensorTypeK *src,
-                                 int64_t rdim,
+                                 long rdim,
                                  const thrust::pair<
                                  typename TensorUtils<TensorTypeK>::DataType,
                                  typename TensorUtils<TensorTypeIndex>::DataType>& init,
                                  BinaryFunction binary_op) {
   unsigned ndim = TensorUtils<TensorTypeK>::getDims(state, src);
   unsigned num_orows = 1;
-  for (int64_t dim = 0; dim < rdim; dim++) {
+  for (long dim = 0; dim < rdim; dim++) {
     num_orows *= TensorUtils<TensorTypeK>::getSize(state, src, dim);
   }
   unsigned row_size = TensorUtils<TensorTypeK>::getSize(state, src, rdim);
@@ -550,7 +550,7 @@ kernelTransformReduceInnermostDimIndex(K *tgt1,
       K *src = src_ + row * row_size;
       // Sequential reduction within a thread.
       for (unsigned col = threadIdx.x; col < row_size; col += blockDim.x) {
-        acc = binary_op(thrust::make_pair<K, Index>(src[col], col + TH_INDEX_BASE), acc);
+        acc = binary_op(acc, thrust::make_pair<K, Index>(src[col], col + TH_INDEX_BASE));
       }
     }
 
@@ -624,7 +624,8 @@ THC_reduceDimIndex(THCState *state,
                    TensorTypeK *tgt1_,
                    TensorTypeIndex *tgt2_,
                    TensorTypeK *src,
-                   int64_t dimension,
+                   long dimension,
+                   int keepdim,
                    const thrust::pair<
                    typename TensorUtils<TensorTypeK>::DataType,
                    typename TensorUtils<TensorTypeIndex>::DataType>& init,
@@ -653,6 +654,10 @@ THC_reduceDimIndex(THCState *state,
   TensorUtils<TensorTypeK>::free(state, src);
   TensorUtils<TensorTypeK>::freeCopyTo(state, tgt1, tgt1_);
   TensorUtils<TensorTypeIndex>::freeCopyTo(state, tgt2, tgt2_);
+  if (!keepdim) {
+    TensorUtils<TensorTypeK>::squeeze1d(state, tgt1_, tgt1_, dimension);
+    TensorUtils<TensorTypeIndex>::squeeze1d(state, tgt2_, tgt2_, dimension);
+  }
 }
 
 template <typename T, typename Index>

@@ -44,22 +44,14 @@ Variable::Variable(
 }
 
 auto Variable::get_grad_accumulator() -> std::shared_ptr<Function> {
-  using weak_type = std::weak_ptr<Function>;
-
-  static std::shared_ptr<Function> null_shared_ptr;
-  static weak_type null_weak_ptr;
-
-  if (grad_fn) return nullptr;
+  if (grad_fn) {
+    throw std::logic_error("get_grad_accumulator() should be only called on leaf Variables");
+  }
   if (!requires_grad) return nullptr;
 
-  auto result = grad_accumulator.lock();
-  if (result) return result;
-
-  // That didn't work, we need to allocate it, but taking into account that other
-  // threads might be doing the same thing.
   std::lock_guard<std::mutex> lock(grad_accumulator_lock);
 
-  result = grad_accumulator.lock();
+  auto result = grad_accumulator.lock();
   if (result) return result;
 
   result = std::make_shared<AccumulateGrad>(shared_from_this());
@@ -68,7 +60,12 @@ auto Variable::get_grad_accumulator() -> std::shared_ptr<Function> {
 }
 
 auto SavedVariable::unpack() -> std::shared_ptr<Variable> {
-  if (!data) return nullptr;
+  if (!data) {
+    if (version) {
+      throw std::runtime_error(ERR_BACKWARD_TWICE);
+    }
+    return nullptr;
+  }
 
   int current_version = **version;
   if (expected_version != current_version) {
@@ -98,5 +95,10 @@ auto SavedVariable::unpack() -> std::shared_ptr<Variable> {
 
   return new_var;
 }
+
+const char* ERR_BACKWARD_TWICE =
+    "Trying to backward through the graph a second time, but the buffers have "
+    "already been freed. Specify retain_variables=True when calling backward "
+    "the first time.";
 
 }} // namespace torch::autograd
