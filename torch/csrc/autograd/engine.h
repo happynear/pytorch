@@ -31,7 +31,7 @@ struct Engine {
   using callback_map = std::unordered_map<Function*, callback_type>;
 
 
-  // Given a list of (Function, int) pairs computes the value of the graph
+  // Given a list of (Function, input number) pairs computes the value of the graph
   // by following next_function references.
   void execute(
       const function_list& roots,
@@ -44,7 +44,7 @@ protected:
       const function_list& roots,
       variable_list& inputs,
       GraphTask& task);
-  void find_stochastic_functions(function_queue& queue, GraphTask& task);
+  void find_stochastic_functions(function_queue& queue, Function* graph_root, GraphTask& task);
   void compute_dependencies(function_queue queue, GraphTask& task);
   void evaluate_function(FunctionTask& task);
   ReadyQueue& ready_queue(int device);

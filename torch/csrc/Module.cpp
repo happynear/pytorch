@@ -65,7 +65,7 @@ static PyObject * THPModule_initNames(PyObject *self, PyObject *arg)
 {
   static std::vector<std::string> names;
 
-  THPObjectPtr types = PySequence_Fast(arg, "expected a sequence");
+  THPObjectPtr types(PySequence_Fast(arg, "expected a sequence"));
   if (!types) return NULL;
 
   int num_classes = PySequence_Fast_GET_SIZE(types.get());
@@ -75,7 +75,7 @@ static PyObject * THPModule_initNames(PyObject *self, PyObject *arg)
     THPUtils_assert(PyType_Check(obj), "expected a PyTypeObject");
     PyTypeObject* type = (PyTypeObject*)obj;
 
-    THPObjectPtr module_name = PyObject_GetAttrString(obj, "__module__");
+    THPObjectPtr module_name(PyObject_GetAttrString(obj, "__module__"));
     if (!module_name) return NULL;
     THPUtils_assert(THPUtils_checkString(module_name.get()),
         "expected __module__ to be a string");
@@ -215,6 +215,7 @@ dispatch:                                                                      \
 IMPLEMENT_STATELESS(sigmoid)
 IMPLEMENT_STATELESS(log)
 IMPLEMENT_STATELESS(log1p)
+IMPLEMENT_STATELESS(lgamma)
 IMPLEMENT_STATELESS(exp)
 IMPLEMENT_STATELESS(cos)
 IMPLEMENT_STATELESS(acos)
@@ -532,6 +533,7 @@ static PyMethodDef TorchMethods[] = {
   {"sigmoid",         (PyCFunction)THPModule_sigmoid,           METH_VARARGS | METH_KEYWORDS, NULL},
   {"log",             (PyCFunction)THPModule_log,               METH_VARARGS | METH_KEYWORDS, NULL},
   {"log1p",           (PyCFunction)THPModule_log1p,             METH_VARARGS | METH_KEYWORDS, NULL},
+  {"lgamma",          (PyCFunction)THPModule_lgamma,            METH_VARARGS | METH_KEYWORDS, NULL},
   {"exp",             (PyCFunction)THPModule_exp,               METH_VARARGS | METH_KEYWORDS, NULL},
   {"cos",             (PyCFunction)THPModule_cos,               METH_VARARGS | METH_KEYWORDS, NULL},
   {"acos",            (PyCFunction)THPModule_acos,              METH_VARARGS | METH_KEYWORDS, NULL},
@@ -833,8 +835,7 @@ PyMODINIT_FUNC PyInit__C()
   Py_INCREF(has_cudnn);
   ASSERT_TRUE(PyModule_AddObject(module, "has_cudnn", has_cudnn) == 0);
 
-  // TODO THD: enable once master-worker mode is implemented
-#if 0 && defined(WITH_DISTRIBUTED)
+#ifdef WITH_DISTRIBUTED_MW
   // See comment on CUDA objects
   ASSERT_TRUE(THDPDoubleStorage_init(module));
   ASSERT_TRUE(THDPFloatStorage_init(module));

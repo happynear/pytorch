@@ -38,6 +38,9 @@ def conv2d(input, weight, bias=None, stride=1, padding=0, dilation=1,
         >>> inputs = autograd.Variable(torch.randn(1,4,5,5))
         >>> F.conv2d(inputs, filters, padding=1)
     """
+    if input is not None and input.dim() != 4:
+        raise ValueError("Expected 4D tensor as input, got {}D tensor instead.".format(input.dim()))
+
     f = ConvNd(_pair(stride), _pair(padding), _pair(dilation), False,
                _pair(0), groups, torch.backends.cudnn.benchmark, torch.backends.cudnn.enabled)
     return f(input, weight, bias)
@@ -66,6 +69,9 @@ def conv1d(input, weight, bias=None, stride=1, padding=0, dilation=1,
         >>> inputs = autograd.Variable(torch.randn(20, 16, 50))
         >>> F.conv1d(inputs, filters)
     """
+    if input is not None and input.dim() != 3:
+        raise ValueError("Expected 3D tensor as input, got {}D tensor instead.".format(input.dim()))
+
     f = ConvNd(_single(stride), _single(padding), _single(dilation), False,
                _single(0), groups, torch.backends.cudnn.benchmark, torch.backends.cudnn.enabled)
     return f(input, weight, bias)
@@ -95,6 +101,10 @@ def conv3d(input, weight, bias=None, stride=1, padding=0, dilation=1,
         >>> inputs = autograd.Variable(torch.randn(20, 16, 50, 10, 20))
         >>> F.conv3d(inputs, filters)
     """
+
+    if input is not None and input.dim() != 5:
+        raise ValueError("Expected 5D tensor as input, got {}D tensor instead.".format(input.dim()))
+
     f = ConvNd(_triple(stride), _triple(padding), _triple(dilation), False,
                _triple(0), groups, torch.backends.cudnn.benchmark, torch.backends.cudnn.enabled)
     return f(input, weight, bias)
@@ -102,6 +112,26 @@ def conv3d(input, weight, bias=None, stride=1, padding=0, dilation=1,
 
 def conv_transpose1d(input, weight, bias=None, stride=1, padding=0,
                      output_padding=0, groups=1, dilation=1):
+    """Applies a 1D transposed convolution operator over an input signal
+    composed of several input planes, sometimes also called "deconvolution".
+
+    See :class:`~torch.nn.ConvTranspose1d` for details and output shape.
+
+    Args:
+        input: input tensor of shape (minibatch x in_channels x iW)
+        weight: filters of shape (in_channels x out_channels x kW)
+        bias: optional bias of shape (out_channels)
+        stride: the stride of the convolving kernel. Default: 1
+        padding: implicit zero padding on the input. Default: 0
+        groups: split input into groups, in_channels should be divisible by
+          the number of groups
+        output_padding: A zero-padding of 0 <= padding < stride that should be
+          added to the output. Default: 0
+        dilation: the spacing between kernel elements. Default: 1
+    """
+    if input is not None and input.dim() != 3:
+        raise ValueError("Expected 3D tensor as input, got {}D tensor instead.".format(input.dim()))
+
     f = ConvNd(_single(stride), _single(padding), _single(dilation), True,
                _single(output_padding),
                groups, torch.backends.cudnn.benchmark, torch.backends.cudnn.enabled)
@@ -129,6 +159,10 @@ def conv_transpose2d(input, weight, bias=None, stride=1, padding=0,
           added to the output. Can be a single number or a tuple. Default: 0
         dilation: the spacing between kernel elements. Default: 1
     """
+
+    if input is not None and input.dim() != 4:
+        raise ValueError("Expected 4D tensor as input, got {}D tensor instead.".format(input.dim()))
+
     f = ConvNd(_pair(stride), _pair(padding), _pair(dilation), True,
                _pair(output_padding), groups, torch.backends.cudnn.benchmark, torch.backends.cudnn.enabled)
     return f(input, weight, bias)
@@ -155,6 +189,9 @@ def conv_transpose3d(input, weight, bias=None, stride=1, padding=0,
           the number of groups
         dilation: the spacing between kernel elements. Default: 1
     """
+    if input is not None and input.dim() != 5:
+        raise ValueError("Expected 5D tensor as input, got {}D tensor instead.".format(input.dim()))
+
     f = ConvNd(_triple(stride), _triple(padding), _triple(dilation), True,
                _triple(output_padding), groups, torch.backends.cudnn.benchmark, torch.backends.cudnn.enabled)
     return f(input, weight, bias)
@@ -369,11 +406,11 @@ def dropout(input, p=0.5, training=False, inplace=False):
 
 
 def threshold(input, threshold, value, inplace=False):
-    return _functions.thnn.auto.Threshold(threshold, value, inplace)(input)
+    return _functions.thnn.Threshold.apply(input, threshold, value, inplace)
 
 
 def relu(input, inplace=False):
-    return _functions.thnn.auto.Threshold(0, 0, inplace)(input)
+    return _functions.thnn.Threshold.apply(input, 0, 0, inplace)
 
 
 def hardtanh(input, min_val=-1., max_val=1., inplace=False):
@@ -389,7 +426,7 @@ def elu(input, alpha=1., inplace=False):
 
 
 def leaky_relu(input, negative_slope=1e-2, inplace=False):
-    return _functions.thnn.auto.LeakyReLU(negative_slope, inplace)(input)
+    return _functions.thnn.LeakyReLU.apply(input, negative_slope, inplace)
 
 
 def prelu(input, weight):
@@ -409,7 +446,7 @@ def hardshrink(input, lambd=0.5):
 
 
 def tanhshrink(input):
-    return input - _autograd_functions.Tanh()(input)
+    return input - _autograd_functions.Tanh.apply(input)
 
 
 def softsign(input):
@@ -437,11 +474,11 @@ def log_softmax(input):
 
 
 def tanh(input):
-    return _autograd_functions.Tanh()(input)
+    return _autograd_functions.Tanh.apply(input)
 
 
 def sigmoid(input):
-    return _autograd_functions.Sigmoid()(input)
+    return _autograd_functions.Sigmoid.apply(input)
 
 
 # etc.
@@ -690,8 +727,27 @@ def pairwise_distance(x1, x2, p=2, eps=1e-6):
     assert x1.size() == x2.size(), "Input sizes must be equal."
     assert x1.dim() == 2, "Input must be a 2D matrix."
     diff = torch.abs(x1 - x2)
-    out = torch.pow(diff + eps, p).sum(dim=1)
+    out = torch.pow(diff + eps, p).sum(dim=1, keepdim=True)
     return torch.pow(out, 1. / p)
+
+
+def cosine_similarity(x1, x2, dim=1, eps=1e-8):
+    r"""Returns cosine similarity between x1 and x2, computed along dim.
+
+    Args:
+        x1 (Variable): First input.
+        x2 (Variable): Second input (of size matching x1).
+        dim (int, optional): Dimension of vectors. Default: 1
+        eps (float, optional): Small value to avoid division by zero. Default: 1e-8
+
+    Shape:
+        - Input: :math:`(\ast_1, D, \ast_2)` where D is at position `dim`.
+        - Output: :math:`(\ast_1, \ast_2)` where 1 is at position `dim`.
+    """
+    w12 = torch.sum(x1 * x2, dim)
+    w1 = torch.norm(x1, 2, dim)
+    w2 = torch.norm(x2, 2, dim)
+    return (w12 / (w1 * w2).clamp(min=eps)).squeeze()
 
 
 def triplet_margin_loss(anchor, positive, negative, margin=1.0, p=2, eps=1e-6, swap=False):
@@ -744,3 +800,25 @@ def triplet_margin_loss(anchor, positive, negative, margin=1.0, p=2, eps=1e-6, s
     dist_hinge = torch.clamp(margin + d_p - d_n, min=0.0)
     loss = torch.mean(dist_hinge)
     return loss
+
+
+def normalize(input, p=2, dim=1, eps=1e-12):
+    r"""Performs :math:`L_p` normalization of inputs over specified dimension.
+
+    Does:
+
+    .. math::
+        v = \frac{v}{\max(\lVert v \rVert_p, \epsilon)}
+
+    for each subtensor v over dimension dim of input. Each subtensor is flattened into a vector,
+    i.e. :math:`\lVert v \rVert_p` is not a matrix norm.
+
+    With default arguments normalizes over the second dimension with Euclidean norm.
+
+    Args:
+        input: input tensor of any shape
+        p (float): the exponent value in the norm formulation
+        dim (int): the dimension to reduce
+        eps (float): small value to avoid division by zero
+    """
+    return input / input.norm(p, dim, True).clamp(min=eps).expand_as(input)

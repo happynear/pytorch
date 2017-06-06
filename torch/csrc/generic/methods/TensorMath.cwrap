@@ -86,6 +86,26 @@
     - THTensor* self
 ]]
 
+[[
+  name: lgamma
+  defined_if: defined(TH_REAL_IS_FLOAT) || defined(TH_REAL_IS_DOUBLE) || CUDA_FLOAT || CUDA_HALF || CUDA_DOUBLE
+  with_stateless: True
+  return: argument 0
+  arguments:
+    - arg: THTensor* result
+      output: True
+    - THTensor* self
+]]
+
+[[
+  name: lgamma_
+  defined_if: defined(TH_REAL_IS_FLOAT) || defined(TH_REAL_IS_DOUBLE) || CUDA_FLOAT || CUDA_HALF || CUDA_DOUBLE
+  cname: lgamma
+  return: self
+  arguments:
+    - THTensor* self
+    - THTensor* self
+]]
 
 [[
   name: exp_
@@ -477,6 +497,8 @@
         - THTensor* self
         - arg: int64_t dim
           wrap_dim: self
+        - arg: bool keepdim
+          default: "true"
 ]]
 
 [[
@@ -497,6 +519,8 @@
         - arg: int64_t dim
           wrap_dim: self
         - CONSTANT false
+        - arg: bool keepdim
+          default: "true"
 ]]
 
 [[
@@ -517,6 +541,8 @@
         - arg: int64_t dim
           wrap_dim: self
         - CONSTANT false
+        - arg: bool keepdim
+          default: "true"
 ]]
 
 [[
@@ -539,6 +565,8 @@
         - real p
         - arg: int64_t dim
           wrap_dim: self
+        - arg: bool keepdim
+          default: "true"
 ]]
 
 [[
@@ -821,6 +849,8 @@
         - THTensor* self
         - arg: int64_t dim
           wrap_dim: self
+        - arg: bool keepdim
+          default: "true"
 ]]
 
 [[
@@ -839,6 +869,8 @@
         - THTensor* self
         - arg: int64_t dim
           wrap_dim: self
+        - arg: bool keepdim
+          default: "true"
 ]]
 
 [[
@@ -1472,7 +1504,7 @@
         - CONSTANT AS_REAL(0)
         - argument 0
         - CONSTANT AS_REAL(1)
-        - THSTensor* mat1
+        - THSTensor* self
         - THTensor* mat2
 ]]
 
@@ -1588,6 +1620,7 @@
         - THTensor* tensor1
         - THTensor* tensor2
     - cname: spaddcmul
+      defined_if: "!IS_DISTRIBUTED"
       return: argument 0
       arguments:
         - THTensor* self

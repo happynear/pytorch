@@ -175,23 +175,9 @@ void THCTensor_(catArray)(THCState *state, THCTensor *result,
     real *data = THCTensor_(data)(state, result);
 
     // Kernel Parameter
-    CatArrInputTensor<real, unsigned int> stackInputs[CAT_ARRAY_BATCH_SIZE];
-    CatArrInputTensor<real, unsigned int> *d_inputs;
-
-    // Attempt to re-use stream's scratch space for the input metadata
-    bool usedScratch = false;
     size_t tensorMetadataSize = sizeof(CatArrInputTensor<real, unsigned int>) * CAT_ARRAY_BATCH_SIZE;
-    if (THCState_getCurrentDeviceScratchSpaceSize(state) > tensorMetadataSize) {
-      void* space = THCState_getCurrentDeviceScratchSpace(state);
-      if (space) {
-        d_inputs = (CatArrInputTensor<real, unsigned int> *) space;
-        usedScratch = true;
-      }
-    }
-    if (!usedScratch) {
-      // Fallback to allocating GPU memory
-      THCudaCheck(THCudaMalloc(state, (void**) &d_inputs, tensorMetadataSize));
-    }
+    CatArrInputTensor<real, unsigned int> *d_inputs;
+    THCudaCheck(THCudaMalloc(state, (void**) &d_inputs, tensorMetadataSize));
 
     OutputTensorSizeStride<unsigned int, CAT_ARRAY_MAX_INPUT_DIMS> param;
 
@@ -201,13 +187,17 @@ void THCTensor_(catArray)(THCState *state, THCTensor *result,
       param.outputStride[i] = THCTensor_(stride)(state, result, i);
     }
 
+    THCStream* stream = THCState_getStream(state);
+
     // Template Declarations for dim = 1, 2, 3, 4
 #define HANDLE_CASE(DIMS) \
-  CatArrayBatchedCopy<real, unsigned int, DIMS><<<applyGrid, applyBlock>>>(data, d_inputs, param, cat_dimension, param.outputStride[cat_dimension]);
+  CatArrayBatchedCopy<real, unsigned int, DIMS><<<applyGrid, applyBlock, 0, stream->stream>>>(data, d_inputs, param, cat_dimension, param.outputStride[cat_dimension]);
 
     // Now we loop
     offset = 0;
     for (i = 0; i < numInputs; i += CAT_ARRAY_BATCH_SIZE) {
+      // Re-allocate stackInputs every iteration to avoid read-after-write hazard
+      CatArrInputTensor<real, unsigned int>* stackInputs = (CatArrInputTensor<real, unsigned int>*) THCudaHostAlloc(state, tensorMetadataSize);
       cohortMax = 0;
       for (j = 0; j < CAT_ARRAY_BATCH_SIZE && (i+j) < numInputs; ++j) {
         int64_t dimSize = cat_dimension < THCTensor_(nDimension)(state, inputs[i+j])
@@ -223,7 +213,14 @@ void THCTensor_(catArray)(THCState *state, THCTensor *result,
         // update offset
         offset += dimSize;
       }
-      THCudaCheck(cudaMemcpy(d_inputs, stackInputs, j * sizeof(CatArrInputTensor<real, unsigned int>), cudaMemcpyHostToDevice));
+      THCudaCheck(cudaMemcpyAsync(
+          d_inputs,
+          stackInputs,
+          j * sizeof(CatArrInputTensor<real, unsigned int>),
+          cudaMemcpyHostToDevice,
+          stream->stream));
+      THCudaHostRecord(state, stackInputs);
+      THCudaHostFree(state, stackInputs);
 
       // Next, let's consider how we set our kernel launch parameters.
       // We borrow from THCApply, which the kernel's internal indexing
@@ -256,9 +253,7 @@ void THCTensor_(catArray)(THCState *state, THCTensor *result,
       }
       THCudaCheck(cudaGetLastError());
     }
-    if (!usedScratch) {
-      THCudaCheck(THCudaFree(state, (void *)d_inputs));
-    }
+    THCudaCheck(THCudaFree(state, d_inputs));
 #undef HANDLE_CASE
   } else {
     offset = 0;

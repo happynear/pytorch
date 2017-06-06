@@ -210,6 +210,7 @@ class Module(object):
                 raise RuntimeError(
                     "forward hooks should never return any values, but '{}'"
                     "didn't return None".format(hook))
+<<<<<<< HEAD
         var = result
         while not isinstance(var, Variable):
             var = var[0]
@@ -219,6 +220,18 @@ class Module(object):
                 wrapper = functools.partial(hook, self)
                 functools.update_wrapper(wrapper, hook)
                 grad_fn.register_hook(wrapper)
+=======
+        if len(self._backward_hooks) > 0:
+            var = result
+            while not isinstance(var, Variable):
+                var = var[0]
+            grad_fn = var.grad_fn
+            if grad_fn is not None:
+                for hook in self._backward_hooks.values():
+                    wrapper = functools.partial(hook, self)
+                    functools.update_wrapper(wrapper, hook)
+                    grad_fn.register_hook(wrapper)
+>>>>>>> b6c75c43c82e04221a199819fc26a1ce4ee45c34
         return result
 
     def __getattr__(self, name):
@@ -338,7 +351,7 @@ class Module(object):
         if len(missing) > 0:
             raise KeyError('missing keys in state_dict: "{}"'.format(missing))
 
-    def parameters(self, memo=None):
+    def parameters(self):
         """Returns an iterator over module parameters.
 
         This is typically passed to an optimizer.
@@ -462,8 +475,16 @@ class Module(object):
         """Sets gradients of all model parameters to zero."""
         for p in self.parameters():
             if p.grad is not None:
+<<<<<<< HEAD
                 p.grad.data.zero_()
                 p.grad.detach_()
+=======
+                if p.grad.volatile:
+                    p.grad.data.zero_()
+                else:
+                    data = p.grad.data
+                    p.grad = Variable(data.new().resize_as_(data).zero_())
+>>>>>>> b6c75c43c82e04221a199819fc26a1ce4ee45c34
 
     def share_memory(self):
         return self._apply(lambda t: t.share_memory_())

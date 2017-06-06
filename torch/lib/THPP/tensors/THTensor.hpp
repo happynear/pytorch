@@ -181,13 +181,14 @@ public:
   virtual THTensor& trunc(const Tensor& src) override;
   virtual THTensor& frac(const Tensor& src) override;
   virtual THTensor& lerp(const Tensor& a, const Tensor& b, scalar_type weight) override;
-  virtual THTensor& mean(const Tensor& src, int dimension) override;
-  virtual THTensor& std(const Tensor& src, int dimension, int flag) override;
-  virtual THTensor& var(const Tensor& src, int dimension, int flag) override;
-  virtual THTensor& norm(const Tensor& src, scalar_type value, int dimension) override;
+  virtual THTensor& mean(const Tensor& src, int dimension, int keepdim) override;
+  virtual THTensor& std(const Tensor& src, int dimension, int flag, int keepdim) override;
+  virtual THTensor& var(const Tensor& src, int dimension, int flag, int keepdim) override;
+  virtual THTensor& norm(const Tensor& src, scalar_type value, int dimension, int keepdim) override;
   virtual THTensor& renorm(const Tensor& src, scalar_type value, int dimension, scalar_type maxnorm) override;
   virtual THTensor& histc(const Tensor& src, int64_t nbins, scalar_type minvalue, scalar_type maxvalue) override;
   virtual THTensor& bhistc(const Tensor& src, int64_t nbins, scalar_type minvalue, scalar_type maxvalue) override;
+
   virtual scalar_type dist(const Tensor& src, scalar_type value) override;
   virtual scalar_type meanall() override;
   virtual scalar_type varall() override;
@@ -300,17 +301,17 @@ public:
   virtual THTensor& match(const Tensor& m1, const Tensor& m2,
                           scalar_type gain) override;
   virtual THTensor& max(const Tensor& indices_, const Tensor& src,
-                        int dimension) override;
+                        int dimension, int keepdim) override;
   virtual THTensor& min(const Tensor& indices_, const Tensor& src,
-                        int dimension) override;
+                        int dimension, int keepdim) override;
   virtual THTensor& kthvalue(const Tensor& indices_, const Tensor& src,
-                             int64_t k, int dimension) override;
+                             int64_t k, int dimension, int keepdim) override;
   virtual THTensor& mode(const Tensor& indices_, const Tensor& src,
-                         int dimension) override;
+                         int dimension, int keepdim) override;
   virtual THTensor& median(const Tensor& indices_, const Tensor& src,
-                           int dimension) override;
-  virtual THTensor& sum(const Tensor& src, int dimension) override;
-  virtual THTensor& prod(const Tensor& src, int dimension) override;
+                           int dimension, int keepdim) override;
+  virtual THTensor& sum(const Tensor& src, int dimension, int keepdim) override;
+  virtual THTensor& prod(const Tensor& src, int dimension, int keepdim) override;
   virtual THTensor& cumsum(const Tensor& src, int dimension) override;
   virtual THTensor& cumprod(const Tensor& src, int dimension) override;
   virtual THTensor& sign(const Tensor& source) override;

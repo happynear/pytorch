@@ -1,4 +1,5 @@
 import torch
+import warnings
 from . import _tensor_str
 from ._utils import _type, _cuda, _range, _rebuild_tensor
 import sys
@@ -262,6 +263,10 @@ class _TensorBase(object):
         urtensor.copy_(xxtensor)
         return result
 
+    def masked_copy_(self, *args, **kwargs):
+        warnings.warn("masked_copy_ is deprecated and renamed to masked_scatter_, and will be removed in v0.3")
+        return self.masked_scatter_(self, *args, **kwargs)
+
     # TODO: add tests for operators
     def __add__(self, other):
         return self.add(other)
@@ -345,41 +350,10 @@ class _TensorBase(object):
         return self.ge(other)
 
     # TODO: add native add or and xor in the libs
-    def __and__(self, other):
-        if (type(self).__name__ != 'ByteTensor' or
-                type(other).__name__ != 'ByteTensor'):
+    def __invert__(self):
+        if type(self).__name__ != 'ByteTensor':
             raise RuntimeError('logical operations are supported on ByteTensors only')
-        return (self + other).eq(2)
-
-    def __or__(self, other):
-        if (type(self).__name__ != 'ByteTensor' or
-                type(other).__name__ != 'ByteTensor'):
-            raise RuntimeError('logical operations are supported on ByteTensors only')
-        return (self + other).gt(0)
-
-    def __xor__(self, other):
-        if (type(self).__name__ != 'ByteTensor' or
-                type(other).__name__ != 'ByteTensor'):
-            raise RuntimeError('logical operations are supported on ByteTensors only')
-        return (self + other).eq(1)
-
-    def __iand__(self, other):
-        if (type(self).__name__ != 'ByteTensor' or
-                type(other).__name__ != 'ByteTensor'):
-            raise RuntimeError('logical operations are supported on ByteTensors only')
-        return self.mul_(other)
-
-    def __ior__(self, other):
-        if (type(self).__name__ != 'ByteTensor' or
-                type(other).__name__ != 'ByteTensor'):
-            raise RuntimeError('logical operations are supported on ByteTensors only')
-        return self.copy_((self + other).gt(0))
-
-    def __ixor__(self, other):
-        if (type(self).__name__ != 'ByteTensor' or
-                type(other).__name__ != 'ByteTensor'):
-            raise RuntimeError('logical operations are supported on ByteTensors only')
-        return self.copy_((self + other).eq(1))
+        return (1 - self)
 
     def __invert__(self):
         if type(self).__name__ != 'ByteTensor':

@@ -14,7 +14,7 @@ void THPTensor_(writeMetadataRaw)(THTensor *self, int fd)
 
 THTensor * THPTensor_(newWithMetadataFileRaw)(int fd, THStorage *storage)
 {
-  THTensorPtr tensor = THTensor_(new)(LIBRARY_STATE_NOARGS);
+  THTensorPtr tensor(THTensor_(new)(LIBRARY_STATE_NOARGS));
   SYSCHECK(read(fd, &tensor->nDimension, sizeof(int64_t)));
   tensor->size = (int64_t*)THAlloc(tensor->nDimension * sizeof(int64_t));
   tensor->stride = (int64_t*)THAlloc(tensor->nDimension * sizeof(int64_t));
