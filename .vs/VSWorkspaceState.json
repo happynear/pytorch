@@ -1,0 +1,10 @@
+{
+  "ExpandedNodes": [
+    "",
+    "\\torch",
+    "\\torch\\lib",
+    "\\torch\\lib\\TH"
+  ],
+  "SelectedNode": "\\torch\\lib\\TH\\THAllocator.c",
+  "PreviewInSolutionExplorer": false
+}

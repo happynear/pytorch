@@ -60,7 +60,7 @@ goto:eof
                   -DTHNN_SO_VERSION=1 ^
                   -DTHCUNN_SO_VERSION=1 ^
                   -DCMAKE_BUILD_TYPE=Release ^
-                  -DLAPACK_LIBRARIES="%INSTALL_DIR%/lib/mkl_rt.lib" -DLAPACK_FOUND=TRUE 
+                  -DLAPACK_LIBRARIES="%INSTALL_DIR%/OpenBLAS/lib/libopenblas.lib" -DLAPACK_FOUND=TRUE 
                   :: debug/release
 
   msbuild INSTALL.vcxproj /p:Configuration=Release

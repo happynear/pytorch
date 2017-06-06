@@ -1,0 +1,20 @@
+{
+  "version": "0.2.1",
+  "tasks": [
+    {
+      "taskName": "build_with_cuda",
+      "appliesTo": "torch/lib/build_all.bat",
+      "type": "command",
+      "command": "./torch/lib/build_all.bat",
+      "args": [
+        "--with-cuda"
+      ]
+    },
+    {
+      "taskName": "build_cpu_only",
+      "appliesTo": "torch/lib/build_all.bat",
+      "command": "./torch/lib/build_all.bat",
+      "type": "command"
+    }
+  ]
+}
