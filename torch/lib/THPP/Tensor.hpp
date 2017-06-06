@@ -285,8 +285,8 @@ struct TensorScalarInterface : public Tensor {
   virtual TensorScalarInterface& lerp(const Tensor& a, const Tensor& b, scalar_type weight) = 0;
   virtual TensorScalarInterface& norm(const Tensor& src, scalar_type value, int dimension, int keepdim) = 0;
   virtual TensorScalarInterface& renorm(const Tensor& src, scalar_type value, int dimension, scalar_type maxnorm) = 0;
-  virtual TensorScalarInterface& histc(const Tensor& src, long nbins, scalar_type minvalue, scalar_type maxvalue) = 0;
-  virtual TensorScalarInterface& bhistc(const Tensor& src, long nbins, scalar_type minvalue, scalar_type maxvalue) = 0;
+  virtual TensorScalarInterface& histc(const Tensor& src, int64_t nbins, scalar_type minvalue, scalar_type maxvalue) = 0;
+  virtual TensorScalarInterface& bhistc(const Tensor& src, int64_t nbins, scalar_type minvalue, scalar_type maxvalue) = 0;
 
   virtual scalar_type dist(const Tensor& src, scalar_type value) = 0;
   virtual scalar_type meanall() = 0;

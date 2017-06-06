@@ -468,7 +468,7 @@ void THTensor_(scatter)(THTensor *tensor, int dim, THLongTensor *index, THTensor
 
 void THTensor_(scatterAdd)(THTensor *tensor, int dim, THLongTensor *index, THTensor *src)
 {
-  long elems_per_row, i, idx;
+  int64_t elems_per_row, i, idx;
 
   THArgCheck(dim < THTensor_(nDimension)(tensor), 2, "Index dimension is out of bounds");
   THArgCheck(THLongTensor_nDimension(index) == THTensor_(nDimension)(tensor), 3,
@@ -478,7 +478,7 @@ void THTensor_(scatterAdd)(THTensor *tensor, int dim, THLongTensor *index, THTen
 
   elems_per_row = THLongTensor_size(index, dim);
 
-  TH_TENSOR_DIM_APPLY3(real, tensor, real, src, long, index, dim,
+  TH_TENSOR_DIM_APPLY3(real, tensor, real, src, int64_t, index, dim,
                        for (i = 0; i < elems_per_row; ++i)
                        {
                          idx = *(index_data + i*index_stride);

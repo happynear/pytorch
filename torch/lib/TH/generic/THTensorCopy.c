@@ -28,8 +28,8 @@ void THTensor_(copyTranspose)(THTensor *tensor, THTensor *src) {
   real *rp = THTensor_(data)(tensor);
   real *bp = THTensor_(data)(buf);
 
-  long NR = THTensor_(size)(src, 0);
-  long NC = THTensor_(size)(src, 1);
+  int64_t NR = THTensor_(size)(src, 0);
+  int64_t NC = THTensor_(size)(src, 1);
   for (long R = 0; R < NR; R += BLOCK_SZ) {
     for (long C = 0; C < NC; C += BLOCK_SZ) {
       real *spo = sp + R + C * NR;
